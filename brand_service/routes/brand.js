@@ -1,5 +1,5 @@
 import express from "express";
-// import { STATUS_CODE } from "node:http";
+import { STATUS_CODES } from "node:http";
 import brand_database from "../config/db.js";
 
 const router = express.Router();
@@ -75,12 +75,27 @@ router.get("/", async function (req, res, next) {
 
 router.get('/:id', async function (req, res, next) {
     const id = req.params.id
-
-    try {
-
-    } catch(error) {
-        nex
+  try {
+    const result = brand_database.prepare("SELECT * FROM brands WHERE id = ?").get(id);
+    if (!result) {
+      let error = new Error(STATUS_CODES[404]);
+      error.status = 404;
+      throw error;
     }
+
+    // Add HATEOAS links
+    const brand = {
+      ...result,
+      _links: {
+        self: { href: `/brand/${result.id}` },
+        collection: { href: '/brand' }
+      }
+    };
+
+    res.json(brand);
+  } catch (error) {
+    next(error);
+  }
 })
 
 export default router;

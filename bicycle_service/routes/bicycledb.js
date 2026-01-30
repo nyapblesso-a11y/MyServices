@@ -36,7 +36,7 @@ const validataBicycleData = (data, isPartial = false) => {
 };
 
 router.get("/", async function (req, res, next) {
-  const { limit = 5, offset = 0, brand, color } = req.query;
+  const { limit = 5, offset = 0, color } = req.query;
   try {
     let query = "SELECT * FROM bicyclesdb";
     const params = [];
