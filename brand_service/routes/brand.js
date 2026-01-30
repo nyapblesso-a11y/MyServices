@@ -98,4 +98,38 @@ router.get('/:id', async function (req, res, next) {
   }
 })
 
+
+router.post("/", async function (req, res, next) {
+  const { brand } = req.body;
+
+  // Validate input
+  const errors = validateBicycleData({brand });
+  if (errors.length > 0) {
+    return res.status(400).json({ errors });
+  }
+
+  try {
+    const stmt = brand_database.prepare("INSERT INTO brands (brand) VALUES (?)");
+    const info = stmt.run( brand.trim());
+
+    // Fetch the created resource
+    const createdBicycle = brand_database.prepare("SELECT * FROM brands WHERE id = ?").get(info.lastInsertRowid);
+
+    // Add HATEOAS links
+    const brands = {
+      ...createdBicycle,
+      _links: {
+        self: { href: `/brand/${createdBicycle.id}` },
+        collection: { href: '/brand' }
+      }
+    };
+
+    // Set Location header
+    res.location(`/brand/${createdBicycle.id}`);
+    res.status(201).json(brands);
+  } catch (error) {
+    next(error);
+  }
+})
+
 export default router;

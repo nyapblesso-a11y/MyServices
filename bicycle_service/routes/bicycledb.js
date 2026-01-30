@@ -18,7 +18,7 @@ const validateContentType = (req, res, next) => {
 
 router.use(validateContentType);
 
-const validataBicycleData = (data, isPartial = false) => {
+const validateBicycleData = (data, isPartial = false) => {
   const error = [];
 
   if (!isPartial && !data.color) {
@@ -96,5 +96,39 @@ router.get("/:id", async function (req, res, next) {
     next(error);
   }
 });
+
+router.post("/", async function (req, res, next) {
+  const { color } = req.body;
+
+  // Validate input
+  const errors = validateBicycleData({  color });
+  if (errors.length > 0) {
+    return res.status(400).json({ errors });
+  }
+
+  try {
+    const stmt = bicycle_database.prepare("INSERT INTO bicyclesdb (color) VALUES (?)");
+    const info = stmt.run( color.trim());
+
+    // Fetch the created resource
+    const createdBicycle = bicycle_database.prepare("SELECT * FROM bicyclesdb WHERE id = ?").get(info.lastInsertRowid);
+
+    // Add HATEOAS links
+    const bicycle = {
+      ...createdBicycle,
+      _links: {
+        self: { href: `/bicycles/${createdBicycle.id}` },
+        collection: { href: '/bicycles' }
+      }
+    };
+
+    // Set Location header
+    res.location(`/bicycles/${createdBicycle.id}`);
+    res.status(201).json(bicycle);
+  } catch (error) {
+    next(error);
+  }
+})
+
 
 export default router;

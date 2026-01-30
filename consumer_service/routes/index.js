@@ -50,12 +50,6 @@ const { BICYCLE_SERVICE_PORT = 5000, BRAND_SERVICE_PORT = 3030 } = process.env;
 const bicycleService = `http://localhost:${BICYCLE_SERVICE_PORT}`;
 const brandService = `http://localhost:${BRAND_SERVICE_PORT}`;
 
-router.post("/store", (req, res) => {
-  const { color, brand } = req.body;
-  const query = `INSERT INTO consumer (color,brand) VALUES (?,?)`;
-  consume_database.query(query, [color, brand], (error, results));
-});
-
 router.get("/:id", async function (req, res, next) {
   const { id } = req.params;
 
@@ -99,7 +93,12 @@ router.get("/:id", async function (req, res, next) {
 
 const combined = Object.assign({}, ...mapped);
 
-res.send(combined)
+ res.send(combined)
+
+// await Promise.all(
+//   ...combined.map((brand, color)=> consume_database.exec(`INSERT INTO consumer (brand), (color) VALUE (?, ?)`,[brand.brand ,color.color]) )
+// )
+// res.send({message: 'Data add successfully into the database'}, combined)
 });
 
 export default router;
